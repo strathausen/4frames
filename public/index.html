@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lomo Lab</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #1a1714;
+      --surface: #2a2520;
+      --accent: #e8a853;
+      --accent-dim: #c4894a;
+      --text: #f5f0e8;
+      --text-dim: #a09080;
+      --vignette: rgba(0,0,0,0.4);
+    }
+
+    body {
+      font-family: 'Space Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Film grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* Vignette */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at center, transparent 40%, var(--vignette) 100%);
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    .upload-zone {
+      background: var(--surface);
+      border: 2px dashed var(--text-dim);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(232, 168, 83, 0.05);
+    }
+
+    .upload-zone.processing {
+      pointer-events: none;
+    }
+
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1rem;
+      opacity: 0.6;
+    }
+
+    .upload-text {
+      font-size: 0.875rem;
+      color: var(--text-dim);
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      opacity: 0.6;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .progress {
+      display: none;
+      margin-top: 1.5rem;
+    }
+
+    .progress.active {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: var(--surface);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .progress-text {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+
+    .result {
+      display: none;
+      margin-top: 2rem;
+    }
+
+    .result.active {
+      display: block;
+    }
+
+    .preview {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .preview img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 1rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dim);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--text-dim);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      opacity: 0.5;
+    }
+
+    /* Sprocket holes decoration */
+    .sprockets {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      padding: 20px 0;
+      opacity: 0.15;
+    }
+
+    .sprockets.left { left: 10px; }
+    .sprockets.right { right: 10px; }
+
+    .sprocket {
+      width: 16px;
+      height: 10px;
+      background: var(--text);
+      border-radius: 2px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 700px) {
+      .sprockets { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sprockets left">
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+  </div>
+  <div class="sprockets right">
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+    <div class="sprocket"></div>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1>Lomo Lab</h1>
+      <p class="subtitle">Action Sampler GIF Maker</p>
+    </header>
+
+    <div class="upload-zone" id="uploadZone">
+      <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 16V4m0 0L8 8m4-4l4 4M4 20h16"/>
+      </svg>
+      <p class="upload-text">Drop your 4-frame image here</p>
+      <p class="upload-hint">or click to browse</p>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <div class="progress" id="progress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <p class="progress-text" id="progressText">Processing...</p>
+    </div>
+
+    <div class="result" id="result">
+      <div class="preview">
+        <img id="preview" alt="Generated GIF">
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="newBtn">New</button>
+        <button class="btn btn-primary" id="downloadBtn">Download</button>
+      </div>
+    </div>
+
+    <footer>
+      Four frames. One moment.
+    </footer>
+  </div>
+
+  <script>
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const progress = document.getElementById('progress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const result = document.getElementById('result');
+    const preview = document.getElementById('preview');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const newBtn = document.getElementById('newBtn');
+
+    let currentGifId = null;
+
+    // Click to upload
+    uploadZone.addEventListener('click', () => fileInput.click());
+
+    // Drag and drop
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        processFile(file);
+      }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) processFile(file);
+    });
+
+    // New button
+    newBtn.addEventListener('click', () => {
+      result.classList.remove('active');
+      uploadZone.style.display = 'block';
+      fileInput.value = '';
+      currentGifId = null;
+    });
+
+    // Download button
+    downloadBtn.addEventListener('click', () => {
+      if (currentGifId) {
+        window.location.href = `/api/download/${currentGifId}`;
+      }
+    });
+
+    async function processFile(file) {
+      uploadZone.classList.add('processing');
+      uploadZone.style.display = 'none';
+      progress.classList.add('active');
+      result.classList.remove('active');
+
+      const steps = [
+        'Extracting frames...',
+        'Analyzing alignment...',
+        'Stabilizing...',
+        'Creating GIF...'
+      ];
+
+      let step = 0;
+      const stepInterval = setInterval(() => {
+        step = Math.min(step + 1, steps.length - 1);
+        progressText.textContent = steps[step];
+        progressFill.style.width = `${((step + 1) / steps.length) * 80}%`;
+      }, 800);
+
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch('/api/process', {
+          method: 'POST',
+          body: formData
+        });
+
+        clearInterval(stepInterval);
+
+        if (!response.ok) {
+          throw new Error('Processing failed');
+        }
+
+        const data = await response.json();
+        currentGifId = data.gifId;
+
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Done!';
+
+        setTimeout(() => {
+          progress.classList.remove('active');
+          preview.src = `/api/gif/${currentGifId}`;
+          result.classList.add('active');
+          uploadZone.classList.remove('processing');
+        }, 500);
+
+      } catch (error) {
+        clearInterval(stepInterval);
+        progressText.textContent = 'Error: ' + error.message;
+        progressFill.style.background = '#c44';
+        setTimeout(() => {
+          progress.classList.remove('active');
+          uploadZone.style.display = 'block';
+          uploadZone.classList.remove('processing');
+          progressFill.style.background = '';
+          progressFill.style.width = '0%';
+        }, 2000);
+      }
+    }
+  </script>
+</body>
+</html>
