@@ -4,6 +4,8 @@ A web app that converts Lomo Action Sampler photos into stabilized animated GIFs
 
 **Live at [4fram.es](https://4fram.es)**
 
+![Input](public/examples/example_small.jpg) → ![Output](public/examples/example_small.gif)
+
 ## What it does
 
 The Lomo Action Sampler camera captures 4 sequential photos in a 2x2 grid on a single frame. This app:
