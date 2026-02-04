@@ -33,8 +33,8 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
   const outputPath = path.join(outputDir, `${outputId}.gif`);
 
   try {
-    // Get image dimensions (use 'convert' for IM6 compatibility)
-    const dims = execSync(`identify -format "%w %h" "${inputPath}"`).toString().trim().split(' ');
+    // Get image dimensions
+    const dims = execSync(`magick identify -format "%w %h" "${inputPath}"`).toString().trim().split(' ');
     const w = parseInt(dims[0]);
     const h = parseInt(dims[1]);
     const hw = Math.floor(w / 2);
@@ -43,14 +43,14 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
     const tmp = `/tmp/lomo_${outputId}`;
 
     // Extract 4 quadrants
-    execSync(`convert "${inputPath}" -crop ${hw}x${hh}+0+0 +repage "${tmp}_f0.png"`);
-    execSync(`convert "${inputPath}" -crop ${hw}x${hh}+${hw}+0 +repage "${tmp}_f1.png"`);
-    execSync(`convert "${inputPath}" -crop ${hw}x${hh}+0+${hh} +repage "${tmp}_f2.png"`);
-    execSync(`convert "${inputPath}" -crop ${hw}x${hh}+${hw}+${hh} +repage "${tmp}_f3.png"`);
+    execSync(`magick "${inputPath}" -crop ${hw}x${hh}+0+0 +repage "${tmp}_f0.png"`);
+    execSync(`magick "${inputPath}" -crop ${hw}x${hh}+${hw}+0 +repage "${tmp}_f1.png"`);
+    execSync(`magick "${inputPath}" -crop ${hw}x${hh}+0+${hh} +repage "${tmp}_f2.png"`);
+    execSync(`magick "${inputPath}" -crop ${hw}x${hh}+${hw}+${hh} +repage "${tmp}_f3.png"`);
 
     // Downsample for alignment
     for (let i = 0; i < 4; i++) {
-      execSync(`convert "${tmp}_f${i}.png" -resize 25% "${tmp}_s${i}.png"`);
+      execSync(`magick "${tmp}_f${i}.png" -resize 25% "${tmp}_s${i}.png"`);
     }
 
     // Find alignment offsets
@@ -83,9 +83,9 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
 
     // Apply alignment
     execSync(`cp "${tmp}_f0.png" "${tmp}_a0.png"`);
-    execSync(`convert "${tmp}_f1.png" -distort SRT "0,0 1 0 ${off1.x},${off1.y}" "${tmp}_a1.png"`);
-    execSync(`convert "${tmp}_f2.png" -distort SRT "0,0 1 0 ${off2.x},${off2.y}" "${tmp}_a2.png"`);
-    execSync(`convert "${tmp}_f3.png" -distort SRT "0,0 1 0 ${off3.x},${off3.y}" "${tmp}_a3.png"`);
+    execSync(`magick "${tmp}_f1.png" -distort SRT "0,0 1 0 ${off1.x},${off1.y}" "${tmp}_a1.png"`);
+    execSync(`magick "${tmp}_f2.png" -distort SRT "0,0 1 0 ${off2.x},${off2.y}" "${tmp}_a2.png"`);
+    execSync(`magick "${tmp}_f3.png" -distort SRT "0,0 1 0 ${off3.x},${off3.y}" "${tmp}_a3.png"`);
 
     // Calculate crop
     const offsets = [off1.x, off1.y, off2.x, off2.y, off3.x, off3.y];
