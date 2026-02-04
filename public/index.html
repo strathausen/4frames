@@ -346,7 +346,7 @@
       <p class="subtitle">Action Sampler GIF Maker</p>
     </header>
 
-    <div class="example">
+    <div class="example" id="example">
       <div class="example-item">
         <img src="/examples/example_small.jpg" alt="4-frame input">
         <p class="example-label">Upload</p>
@@ -399,6 +399,7 @@
     const preview = document.getElementById('preview');
     const downloadBtn = document.getElementById('downloadBtn');
     const newBtn = document.getElementById('newBtn');
+    const example = document.getElementById('example');
 
     let currentGifId = null;
 
@@ -434,6 +435,7 @@
     newBtn.addEventListener('click', () => {
       result.classList.remove('active');
       uploadZone.style.display = 'block';
+      example.style.display = 'flex';
       fileInput.value = '';
       currentGifId = null;
     });
@@ -448,6 +450,7 @@
     async function processFile(file) {
       uploadZone.classList.add('processing');
       uploadZone.style.display = 'none';
+      example.style.display = 'none';
       progress.classList.add('active');
       result.classList.remove('active');
 
