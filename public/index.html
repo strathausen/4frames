@@ -272,6 +272,46 @@
     @media (max-width: 700px) {
       .sprockets { display: none; }
     }
+
+    /* Example preview */
+    .example {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .example-item {
+      text-align: center;
+    }
+
+    .example-item img {
+      width: 180px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .example-label {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .example-arrow {
+      color: var(--accent);
+      font-size: 1.5rem;
+      opacity: 0.6;
+    }
+
+    @media (max-width: 500px) {
+      .example-item img {
+        width: 140px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -305,6 +345,18 @@
       <h1>Lomo Lab</h1>
       <p class="subtitle">Action Sampler GIF Maker</p>
     </header>
+
+    <div class="example">
+      <div class="example-item">
+        <img src="/examples/example_small.jpg" alt="4-frame input">
+        <p class="example-label">Upload</p>
+      </div>
+      <span class="example-arrow">&rarr;</span>
+      <div class="example-item">
+        <img src="/examples/example_small.gif" alt="Animated GIF output">
+        <p class="example-label">Get GIF</p>
+      </div>
+    </div>
 
     <div class="upload-zone" id="uploadZone">
       <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
