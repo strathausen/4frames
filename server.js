@@ -62,7 +62,7 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
         for (let dy = -12; dy <= 12; dy += 2) {
           try {
             const result = execSync(
-              `magick "${tmp}_s${refIdx}.png" \\( "${tmp}_s${frameIdx}.png" -distort SRT "0,0 1 0 ${dx},${dy}" \\) ` +
+              `convert "${tmp}_s${refIdx}.png" \\( "${tmp}_s${frameIdx}.png" -distort SRT "0,0 1 0 ${dx},${dy}" \\) ` +
               `-gravity center -crop 50%x50%+0+0 +repage -metric RMSE -compare -format "%[distortion]" info: 2>&1`
             ).toString();
             const score = parseFloat(result.match(/^[\d.]+/)?.[0] || '1');
@@ -96,7 +96,7 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
 
     // Create GIF with frame order: TL → BL → BR → TR
     execSync(
-      `magick "${tmp}_a0.png" "${tmp}_a2.png" "${tmp}_a3.png" "${tmp}_a1.png" ` +
+      `convert "${tmp}_a0.png" "${tmp}_a2.png" "${tmp}_a3.png" "${tmp}_a1.png" ` +
       `-gravity center -crop ${cw}x${ch}+0+0 +repage -set delay 25 -loop 0 "${outputPath}"`
     );
 
