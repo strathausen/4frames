@@ -33,8 +33,12 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
   const outputPath = path.join(outputDir, `${outputId}.gif`);
 
   try {
+    // Auto-orient image based on EXIF data
+    execSync(`convert "${inputPath}" -auto-orient "${inputPath}_oriented.png"`);
+    const orientedPath = `${inputPath}_oriented.png`;
+
     // Get image dimensions
-    const dims = execSync(`identify -format "%w %h" "${inputPath}"`).toString().trim().split(' ');
+    const dims = execSync(`identify -format "%w %h" "${orientedPath}"`).toString().trim().split(' ');
     const w = parseInt(dims[0]);
     const h = parseInt(dims[1]);
     const hw = Math.floor(w / 2);
@@ -43,10 +47,10 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
     const tmp = `/tmp/lomo_${outputId}`;
 
     // Extract 4 quadrants
-    execSync(`convert "${inputPath}" -crop ${hw}x${hh}+0+0 +repage "${tmp}_f0.png"`);
-    execSync(`convert "${inputPath}" -crop ${hw}x${hh}+${hw}+0 +repage "${tmp}_f1.png"`);
-    execSync(`convert "${inputPath}" -crop ${hw}x${hh}+0+${hh} +repage "${tmp}_f2.png"`);
-    execSync(`convert "${inputPath}" -crop ${hw}x${hh}+${hw}+${hh} +repage "${tmp}_f3.png"`);
+    execSync(`convert "${orientedPath}" -crop ${hw}x${hh}+0+0 +repage "${tmp}_f0.png"`);
+    execSync(`convert "${orientedPath}" -crop ${hw}x${hh}+${hw}+0 +repage "${tmp}_f1.png"`);
+    execSync(`convert "${orientedPath}" -crop ${hw}x${hh}+0+${hh} +repage "${tmp}_f2.png"`);
+    execSync(`convert "${orientedPath}" -crop ${hw}x${hh}+${hw}+${hh} +repage "${tmp}_f3.png"`);
 
     // Downsample for alignment
     for (let i = 0; i < 4; i++) {
@@ -108,6 +112,7 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
         fs.unlinkSync(`${tmp}_a${i}.png`);
       } catch (e) {}
     }
+    try { fs.unlinkSync(orientedPath); } catch (e) {}
     fs.unlinkSync(inputPath);
 
     res.json({
