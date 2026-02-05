@@ -1,7 +1,7 @@
 FROM node:22-alpine
 
-# Install ImageMagick 7
-RUN apk add --no-cache imagemagick
+# Install ImageMagick 7 with JPEG support
+RUN apk add --no-cache imagemagick imagemagick-jpeg
 
 WORKDIR /app
 
