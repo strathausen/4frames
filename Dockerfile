@@ -1,9 +1,7 @@
-FROM node:22-slim
+FROM node:22-alpine
 
-# Install ImageMagick
-RUN apt-get update && apt-get install -y \
-    imagemagick \
-    && rm -rf /var/lib/apt/lists/*
+# Install ImageMagick 7
+RUN apk add --no-cache imagemagick
 
 WORKDIR /app
 

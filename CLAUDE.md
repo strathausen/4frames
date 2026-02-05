@@ -35,11 +35,13 @@ Single-page app with Node.js/Express backend:
 6. Create GIF with frame order: TL → BL → BR → TR (matches camera firing sequence)
 7. Clean up temp files in `/tmp/lomo-uploads/` and `/tmp/lomo-output/`
 
-Image processing uses ImageMagick `convert` and `identify` commands via `execSync`.
+Image processing uses ImageMagick 7 `magick` and `magick identify` commands via `execSync`.
 
 ## Key Implementation Details
 
 - 50MB upload limit
 - 25ms delay between GIF frames
 - Alignment search: ±12px range at 2px intervals on 25% downsampled images, then scaled 4x
-- Frame order hardcoded at line ~103 in server.js
+- Frame order varies by orientation (server.js ~101-107):
+  - Landscape (w > h): TL → BL → BR → TR (counter-clockwise spiral)
+  - Portrait (h > w): TL → TR → BL → BR (standard reading order)

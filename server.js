@@ -34,11 +34,11 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
 
   try {
     // Auto-orient image based on EXIF data
-    execSync(`convert "${inputPath}" -auto-orient "${inputPath}_oriented.png"`);
+    execSync(`magick "${inputPath}" -auto-orient "${inputPath}_oriented.png"`);
     const orientedPath = `${inputPath}_oriented.png`;
 
     // Get image dimensions
-    const dims = execSync(`identify -format "%w %h" "${orientedPath}"`).toString().trim().split(' ');
+    const dims = execSync(`magick identify -format "%w %h" "${orientedPath}"`).toString().trim().split(' ');
     const w = parseInt(dims[0]);
     const h = parseInt(dims[1]);
     const hw = Math.floor(w / 2);
@@ -47,14 +47,14 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
     const tmp = `/tmp/lomo_${outputId}`;
 
     // Extract 4 quadrants
-    execSync(`convert "${orientedPath}" -crop ${hw}x${hh}+0+0 +repage "${tmp}_f0.png"`);
-    execSync(`convert "${orientedPath}" -crop ${hw}x${hh}+${hw}+0 +repage "${tmp}_f1.png"`);
-    execSync(`convert "${orientedPath}" -crop ${hw}x${hh}+0+${hh} +repage "${tmp}_f2.png"`);
-    execSync(`convert "${orientedPath}" -crop ${hw}x${hh}+${hw}+${hh} +repage "${tmp}_f3.png"`);
+    execSync(`magick "${orientedPath}" -crop ${hw}x${hh}+0+0 +repage "${tmp}_f0.png"`);
+    execSync(`magick "${orientedPath}" -crop ${hw}x${hh}+${hw}+0 +repage "${tmp}_f1.png"`);
+    execSync(`magick "${orientedPath}" -crop ${hw}x${hh}+0+${hh} +repage "${tmp}_f2.png"`);
+    execSync(`magick "${orientedPath}" -crop ${hw}x${hh}+${hw}+${hh} +repage "${tmp}_f3.png"`);
 
     // Downsample for alignment
     for (let i = 0; i < 4; i++) {
-      execSync(`convert "${tmp}_f${i}.png" -resize 25% "${tmp}_s${i}.png"`);
+      execSync(`magick "${tmp}_f${i}.png" -resize 25% "${tmp}_s${i}.png"`);
     }
 
     // Find alignment offsets
@@ -66,7 +66,7 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
         for (let dy = -12; dy <= 12; dy += 2) {
           try {
             const result = execSync(
-              `convert "${tmp}_s${refIdx}.png" \\( "${tmp}_s${frameIdx}.png" -distort SRT "0,0 1 0 ${dx},${dy}" \\) ` +
+              `magick "${tmp}_s${refIdx}.png" \\( "${tmp}_s${frameIdx}.png" -distort SRT "0,0 1 0 ${dx},${dy}" \\) ` +
               `-gravity center -crop 50%x50%+0+0 +repage -metric RMSE -compare -format "%[distortion]" info: 2>&1`
             ).toString();
             const score = parseFloat(result.match(/^[\d.]+/)?.[0] || '1');
@@ -87,9 +87,9 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
 
     // Apply alignment
     execSync(`cp "${tmp}_f0.png" "${tmp}_a0.png"`);
-    execSync(`convert "${tmp}_f1.png" -distort SRT "0,0 1 0 ${off1.x},${off1.y}" "${tmp}_a1.png"`);
-    execSync(`convert "${tmp}_f2.png" -distort SRT "0,0 1 0 ${off2.x},${off2.y}" "${tmp}_a2.png"`);
-    execSync(`convert "${tmp}_f3.png" -distort SRT "0,0 1 0 ${off3.x},${off3.y}" "${tmp}_a3.png"`);
+    execSync(`magick "${tmp}_f1.png" -distort SRT "0,0 1 0 ${off1.x},${off1.y}" "${tmp}_a1.png"`);
+    execSync(`magick "${tmp}_f2.png" -distort SRT "0,0 1 0 ${off2.x},${off2.y}" "${tmp}_a2.png"`);
+    execSync(`magick "${tmp}_f3.png" -distort SRT "0,0 1 0 ${off3.x},${off3.y}" "${tmp}_a3.png"`);
 
     // Calculate crop
     const offsets = [off1.x, off1.y, off2.x, off2.y, off3.x, off3.y];
@@ -98,9 +98,15 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
     const cw = hw - margin * 2;
     const ch = hh - margin * 2;
 
-    // Create GIF with frame order: TL → BL → BR → TR
+    // Create GIF with appropriate frame order based on orientation
+    // Landscape: TL → BL → BR → TR (counter-clockwise spiral, matches Lomo firing sequence)
+    // Portrait: TL → TR → BL → BR (standard reading order)
+    const isPortrait = h > w;
+    const frameOrder = isPortrait
+      ? `"${tmp}_a0.png" "${tmp}_a1.png" "${tmp}_a2.png" "${tmp}_a3.png"`
+      : `"${tmp}_a0.png" "${tmp}_a2.png" "${tmp}_a3.png" "${tmp}_a1.png"`;
     execSync(
-      `convert "${tmp}_a0.png" "${tmp}_a2.png" "${tmp}_a3.png" "${tmp}_a1.png" ` +
+      `magick ${frameOrder} ` +
       `-gravity center -crop ${cw}x${ch}+0+0 +repage -set delay 25 -loop 0 "${outputPath}"`
     );
 
