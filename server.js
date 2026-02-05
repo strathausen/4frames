@@ -9,7 +9,7 @@ const PORT = 3000;
 
 // Configure multer for file uploads
 const upload = multer({
-  dest: '/tmp/lomo-uploads/',
+  dest: '/tmp/4frames-uploads/',
   limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
@@ -17,7 +17,7 @@ const upload = multer({
 app.use(express.static('public'));
 
 // Create output directory
-const outputDir = '/tmp/lomo-output';
+const outputDir = '/tmp/4frames';
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
@@ -44,7 +44,7 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
     const hw = Math.floor(w / 2);
     const hh = Math.floor(h / 2);
 
-    const tmp = `/tmp/lomo_${outputId}`;
+    const tmp = `/tmp/4frames_${outputId}`;
 
     // Extract 4 quadrants
     execSync(`magick "${orientedPath}" -crop ${hw}x${hh}+0+0 +repage "${tmp}_f0.png"`);
@@ -147,12 +147,12 @@ app.get('/api/gif/:id', (req, res) => {
 app.get('/api/download/:id', (req, res) => {
   const gifPath = path.join(outputDir, `${req.params.id}.gif`);
   if (fs.existsSync(gifPath)) {
-    res.download(gifPath, `lomo-${req.params.id}.gif`);
+    res.download(gifPath, `4frames-${req.params.id}.gif`);
   } else {
     res.status(404).json({ error: 'GIF not found' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Lomo GIF Lab running at http://localhost:${PORT}`);
+  console.log(`4frames running at http://localhost:${PORT}`);
 });
