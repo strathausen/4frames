@@ -456,8 +456,11 @@
       uploadZone.classList.add('processing');
       uploadZone.style.display = 'none';
       example.style.display = 'none';
-      progress.classList.add('active');
       result.classList.remove('active');
+      progressText.textContent = 'Extracting frames...';
+      progressFill.style.width = '0%';
+      progressFill.style.background = '';
+      progress.classList.add('active');
 
       const steps = [
         'Extracting frames...',
