@@ -7,27 +7,6 @@ const fs = require('fs');
 const app = express();
 const PORT = 3000;
 
-// Redirect HTTP to HTTPS and non-www to www in production
-app.use((req, res, next) => {
-  const host = req.get('host');
-  const proto = req.get('x-forwarded-proto');
-
-  // Skip in development
-  if (host?.includes('localhost')) return next();
-
-  // Redirect HTTP to HTTPS
-  if (proto === 'http') {
-    return res.redirect(301, `https://${host}${req.url}`);
-  }
-
-  // Redirect non-www to www
-  if (host && !host.startsWith('www.')) {
-    return res.redirect(301, `https://www.${host}${req.url}`);
-  }
-
-  next();
-});
-
 // Configure multer for file uploads
 const upload = multer({
   dest: '/tmp/lomo-uploads/',
