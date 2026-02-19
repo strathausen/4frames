@@ -93,6 +93,17 @@
       text-transform: uppercase;
     }
 
+    .subtitle a {
+      color: var(--text-dim);
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+      text-underline-offset: 3px;
+    }
+
+    .subtitle a:hover {
+      color: var(--accent);
+    }
+
     .upload-zone {
       background: var(--surface);
       border: 2px dashed var(--text-dim);
@@ -250,6 +261,15 @@
       opacity: 0.5;
     }
 
+    footer a {
+      color: var(--text-dim);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--accent);
+    }
+
     /* Sprocket holes decoration */
     .sprockets {
       position: fixed;
@@ -348,7 +368,7 @@
   <div class="container">
     <header>
       <h1>Four Frames<br>One Moment</h1>
-      <p class="subtitle">Action Sampler GIF Maker</p>
+      <p class="subtitle">lomography <a href="https://shop.lomography.com/de/actionsampler-clear">Action Sampler</a> GIF Maker</p>
     </header>
 
     <div class="example" id="example">
@@ -390,7 +410,7 @@
     </div>
 
     <footer>
-      4fram.es
+      4fram.es · by <a href="https://www.stratha.us">strathausen</a> · <a href="https://github.com/strathausen/4frames">source</a>
     </footer>
   </div>
 
